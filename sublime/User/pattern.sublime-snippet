@@ -1,0 +1,58 @@
+<snippet>
+  <content><![CDATA[
+# English title
+# Russsian title
+
+...
+
+...
+
+## Причины, повлекшие рефакторинг
+
+## Достоинства
+
+## Недостатки
+
+## Когда его нельзя применить
+
+
+
+## Полезные факты
+
+
+
+## Порядок рефакторинга
+
+1. 
+
+5. Запускаем и тестируем.
+
+
+
+
+
+## Противоположный рефакторинг
+
+- 
+
+## Родственные рефакторинги
+
+- 
+
+## Применяется в других рефакторингах
+
+- 
+
+## Убивает запахи
+
+- 
+
+
+
+]]></content>
+  <!-- Optional: Set a tabTrigger to define how to trigger the snippet -->
+  <tabTrigger>pattern</tabTrigger>
+  <!-- Optional: Set a scope to limit where the snippet will trigger -->
+  <!-- <scope>*.md</scope> -->
+  <description>Refactoring template</description>
+</snippet>

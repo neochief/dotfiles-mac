@@ -1,0 +1,15 @@
+[
+  { "keys": ["super+r"], "command": "show_panel", "args": {"panel": "replace", "reverse": false} },
+  { "keys": ["f3"], "command": "find_next" },
+  { "keys": ["super+shift+r"], "command": "show_panel", "args": {"panel": "find_in_files"} },
+  { "keys": ["super+shift+f"], "command": "show_panel", "args": {"panel": "find_in_files"} },
+  { "keys": ["super+alt+l"], "command": "reindent" , "args": { "single_line": true } },
+  { "keys": ["super+left"], "command": "move_to", "args": {"to": "bol"} },
+  { "keys": ["super+right"], "command": "move_to", "args": {"to": "eol"} },
+  { "keys": ["home"], "command": "move_to", "args": {"to": "bol"} },
+  { "keys": ["end"], "command": "move_to", "args": {"to": "eol"} },
+  { "keys": ["shift+end"], "command": "move_to", "args": {"to": "eol", "extend": true} },
+  { "keys": ["shift+home"], "command": "move_to", "args": {"to": "bol", "extend": true } },
+  { "keys": ["ctrl+shift+down"], "command": "swap_line_down" },
+  { "keys": ["ctrl+shift+up"], "command": "swap_line_up" }
+]

@@ -5,6 +5,10 @@
 # and then hooking them to the login and logout
 #
 
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+sudo -v
+
 #-- Find 'echo' program in PATH or use Mac Ports default location
 ECHO="$( which echo )"
 ECHO="${ECHO:-/opt/local/libexec/gnubin/echo}"
@@ -14,10 +18,6 @@ ECHO="${ECHO:-/opt/local/libexec/gnubin/echo}"
   && ECHO="echo -e" \
   || ECHO="echo"
 
-if [ "$(id -u)" != "0" ]; then
-	${ECHO} "You need administrative privileges to install this script.\nPlease run: sudo ./install.sh"
-	exit 1
-fi
 
 #-- Force OS X 'stat' in case of GNU version installed
 ACTUAL_USER=$(sudo /usr/bin/stat -f '%Su' ~)
@@ -52,8 +52,8 @@ else
 	sudo -u $ACTUAL_USER ${ECHO} "false" > ~/.nobootsound_logoutvol
 	
 	# Copy login and logout scripts and make them executable
-	sudo -u $ACTUAL_USER cp nobootsound_loginhook ~/.nobootsound_loginhook
-	sudo -u $ACTUAL_USER cp nobootsound_logouthook ~/.nobootsound_logouthook
+	sudo -u $ACTUAL_USER cp "${DIR}/nobootsound_loginhook" ~/.nobootsound_loginhook
+	sudo -u $ACTUAL_USER cp "${DIR}/nobootsound_logouthook" ~/.nobootsound_logouthook
 	sudo -u $ACTUAL_USER chmod +x ~/.nobootsound_loginhook
 	sudo -u $ACTUAL_USER chmod +x ~/.nobootsound_logouthook
 
