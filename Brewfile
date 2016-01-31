@@ -2,6 +2,7 @@ cask_args appdir: '/Applications'
 
 tap 'caskroom/versions'
 tap 'homebrew/bundle'
+tap 'homebrew/services'
 
 cask 'xquartz'
 
@@ -22,6 +23,8 @@ brew 'node'
 brew 'unrar'
 brew 'wget'
 brew 'duti'
+brew 'dockutil'
+brew 'trash'
 
 cask 'firefox'
 cask 'google-chrome'
@@ -46,7 +49,3 @@ cask 'vlc'
 #cask 'qbittorrent'
 
 
-brew 'dockutil'
-brew 'dnsmasq'
-brew 'nginx'
-brew 'mariadb'

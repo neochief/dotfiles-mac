@@ -1,0 +1,195 @@
+#!/usr/bin/env bash
+
+sudo -v
+
+template_location="$HOME/.dotfiles/www/site-template.conf"
+if [ ! -f "${template_location}" ]; then
+    echo "ERROR: nginx site template is missing (~/.dotfiles/www/site-template.conf)."
+    exit 1
+fi
+
+# Get the domain name.
+if [ -n "$1" ]; then
+    domain="$1"
+else
+    echo -n "Enter domain name (e.g. dev.example.com) and press [ENTER]: "
+    read domain
+fi
+
+if [ "${domain}" == "" ]; then
+    echo "Domain can not be empty."
+    exit 1
+fi
+
+project="$(echo $domain | sed -e 's/^.*dev\.//g' -e 's/\.com$//g' -e 's/\.guru$//g')"
+host_config="/etc/nginx/sites-available/${domain}.conf"
+host_config_enabled="/etc/nginx/sites-enabled/${domain}.conf"
+
+
+# Check whether the host is already generated.
+if [ -f "${host_config}" ]; then
+    echo -n "This host already exists. Do you want to remove it [ yes / no ]? "
+    read confirm
+
+    if [ "${confirm}" == "yes" ]; then
+        result=""
+
+        if [ -d "${HOME}/www/${domain}" ]; then
+            if [ $(find ${HOME}/www/${domain} -maxdepth 1 | wc -l) -le 2 ]; then # 2 = index.html + .
+                rm -rf "$HOME/www/${domain}"
+            else
+                echo -n "Do you want to also remove the DOCUMENT ROOT (~/www/${domain}) [ yes / no ]? (yes) "
+                read confirm
+
+                if [ "$confirm" == "" ] || [ "$confirm" == "yes" ]; then
+                    trash "$HOME/www/${domain}"
+                    result="$result\nDocument root (~/www/${domain}) has been trashed."
+                else
+                    result="$result\nDocument root (~/www/${domain}) has been left untouched."
+                fi
+            fi
+        fi
+
+        RESULT=`mysqlshow --user=root --password=root ${project}| grep -v Wildcard | grep -o ${project}`
+        if [ "$RESULT" == "${project}" ]; then
+            echo -n "Do you want to also remove the DATABASE [ yes / no ]? (yes) "
+            read confirm
+
+            if [ "$confirm" == "" ] || [ "$confirm" == "yes" ]; then
+                mysql -e "DROP DATABASE IF EXISTS \`${project}\`" -uroot -proot
+                result="$result\nDatabase has been dropped."
+            else
+                result="$result\nDatabase has been left untouched."
+            fi
+        fi
+
+        sudo rm -f "${host_config}"
+        sudo rm -f "${host_config_enabled}"
+        sudo security delete-certificate -c "${domain}"
+        rm -rf "$HOME/www/ssl/${domain}"
+        sudo sed -i '' -e ':a' -e 'N' -e '$!ba' -e "s/\n*127.0.0.1 ${domain} #auto-host//g" /etc/hosts
+        sudo nginx -s reload
+        #flush cache
+        sudo killall -HUP mDNSResponder && scutil --dns > /dev/null
+        echo -e "\nHost ${domain} removed.$result"
+        exit 0
+    fi
+    echo "No definitive answer given, exiting."
+    exit 1
+fi
+
+# Generate doc root.
+doc_root="$HOME/www/${domain}"
+mkdir -p "$HOME/www/${domain}"
+
+# SSL certs.
+cert_location="$HOME/www/ssl/${domain}"
+mkdir -p "$HOME/www/ssl"
+mkdir -p "$HOME/www/ssl/${domain}"
+
+if [ ! -f "${cert_location}/${domain}.key" ]; then
+    cd "${cert_location}" && \
+    openssl req -nodes -new -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${domain}" -keyout "${domain}.key" -out "${domain}.crt" &> /dev/null
+    sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "${domain}.crt"
+fi
+
+
+# NginX configs.
+cp "${template_location}" "${host_config}"
+
+sed -i '' "s/%DOMAIN%/$(echo $domain | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g')/g" "${host_config}"
+sed -i '' "s/%DOC_ROOT%/$(echo $doc_root | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g')/g" "${host_config}"
+sed -i '' "s/%CERT_LOCATION%/$(echo $cert_location | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g')/g" "${host_config}"
+
+ln -sf "${host_config}" "${host_config_enabled}"
+sudo nginx -s reload
+
+
+# Hosts.
+sudo echo "127.0.0.1 ${domain} #auto-host" | sudo tee -a /etc/hosts > /dev/null
+
+
+# Flush cache.
+sudo killall -HUP mDNSResponder && scutil --dns > /dev/null
+echo "Host ${domain} created."
+
+
+# Checkout from GIT.
+if [ -n "$2" ]; then
+    git_repo="$2"
+else
+    echo -n "Enter the GIT repository path if needed (optional): "
+    read git_repo
+fi
+
+if [ ! "${git_repo}" == "" ]; then
+    if [ -n "$3" ]; then
+        git_branch="$3"
+    else
+        echo -n "Enter the branch name (master): "
+        read git_branch
+    fi
+fi
+
+if [ ! "${git_repo}" == "" ]; then
+    # if docroot is not empty, then abort
+    if [ $(find ${doc_root} -maxdepth 1 | wc -l) -gt 1 ]; then
+        echo "Can't clone repo, the DOCUMENT ROOT (~/www/${domain}) is not empty. Do it manually, please."
+        open "${doc_root}"
+    else
+        git clone --recursive "${git_repo}" "${doc_root}"
+
+        new_doc_root=""
+        if [ -d "${doc_root}/website" ]; then
+            doc_root="${doc_root}/website"
+        fi
+        if [ -d "${doc_root}/public" ]; then
+            new_doc_root="${doc_root}/public"
+        fi
+        if [ "$new_doc_root" != "" ]; then
+            sed -i '' "s/root .*;/root $(echo $new_doc_root | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g');/g" "${host_config}"
+            sudo nginx -s reload
+        fi
+
+        if [ ! -f "${doc_root}/.env" ] && [ -f "${doc_root}/.env.example" ]; then
+            cp "${doc_root}/.env.example" "${doc_root}/.env"
+            sed -i '' "s/APP_ENV=.*/APP_ENV=local/g" "${doc_root}/.env"
+            sed -i '' "s/APP_DEBUG=.*/APP_DEBUG=true/g" "${doc_root}/.env"
+            sed -i '' "s/DB_DATABASE=.*/DB_DATABASE=${project}/g" "${doc_root}/.env"
+            sed -i '' "s/DB_USERNAME=.*/DB_USERNAME=root/g" "${doc_root}/.env"
+            sed -i '' "s/DB_PASSWORD=.*/DB_PASSWORD=root/g" "${doc_root}/.env"
+        fi
+
+        mysql -e "CREATE DATABASE IF NOT EXISTS \`${project}\` CHARACTER SET utf8 COLLATE utf8_general_ci" -uroot -proot
+
+        backup_path=""
+        if [ -f "$HOME/Dropbox/work/backups/${project}.com/mysql/${project}_prod.sql.gz" ]; then
+            backup_path="$HOME/Dropbox/work/backups/${project}.com/mysql/${project}_prod.sql.gz"
+        fi
+        if [ -f "$HOME/Dropbox/work/backups/${project}.guru/mysql/${project}_prod.sql.gz" ]; then
+            backup_path="$HOME/Dropbox/work/backups/${project}.guru/mysql/${project}_prod.sql.gz"
+        fi
+        if [ -f "$HOME/Dropbox/work/backups/${project}/mysql/${project}_prod.sql.gz" ]; then
+            backup_path="$HOME/Dropbox/work/backups/${project}/mysql/${project}_prod.sql.gz"
+        fi
+        if [ "${backup_path}" != "" ]; then
+            gunzip < "${backup_path}" | mysql -u root -proot "\`${project}\`"
+        fi
+
+        if [ ! "${git_branch}" == "" ]; then
+            cd "${doc_root}" && git checkout "${git_branch}" && git submodule foreach --recursive git checkout "${git_branch}"
+        fi
+        cd "${doc_root}" && composer install && php artisan migrate && npm install && grunt dev
+    fi
+else
+    if [ $(find ${doc_root} -maxdepth 1 | wc -l) -le 1 ]; then
+        touch "${doc_root}/index.html"
+        echo "[${domain}] is working!" >> "${doc_root}/index.html"
+    fi
+fi
+
+
+# Open host in browser.
+open "http://${domain}"
+echo "Host ${domain} ready."
+cd "${doc_root}"

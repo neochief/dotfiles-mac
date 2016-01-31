@@ -25,7 +25,7 @@ alias sshradadata2="ssh forge@46.4.85.73"
 alias sshradadatad2="ssh -R 9000:localhost:9000 forge@46.4.85.73"
 alias sshproxy="ssh -D 12345 forge@178.79.157.251"
 
-alias selenium="(cd ~; java -jar selenium-server-standalone-2.45.0.jar)"
+alias selenium="selenium-server -port 4444"
 alias cc="vendor/bin/codecept"
 alias ccr="vendor/bin/codecept run"
 alias ccra="vendor/bin/codecept run acceptance"
