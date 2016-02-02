@@ -7,10 +7,10 @@
 export ZSH=$HOME/.dotfiles
 
 # Set OS X defaults
-$ZSH/osx/set-defaults.sh
+# $ZSH/osx/set-defaults.sh
 
 # Install Xcode command line tools
-xcode-select --install
+xcode-select --install || true
 
 # Install homebrew
 $ZSH/homebrew/install.sh 2>&1

@@ -175,6 +175,8 @@ sudo pmset -a sms 0
 # Disable “natural” (Lion-style) scrolling
 defaults write NSGlobalDomain com.apple.swipescrolldirection -bool false
 
+defaults write NSGlobalDomain com.apple.scrollwheel.scaling -int 0
+
 # Increase sound quality for Bluetooth headphones/headsets
 defaults write com.apple.BluetoothAudioAgent "Apple Bitpool Min (editable)" -int 40
 
@@ -385,6 +387,9 @@ defaults write com.apple.dock show-process-indicators -bool true
 # Don’t animate opening applications from the Dock
 defaults write com.apple.dock launchanim -bool false
 
+# Place dock on the left
+defaults write com.apple.dock orientation -string left
+
 # Speed up Mission Control animations
 defaults write com.apple.dock expose-animation-duration -float 0.1
 
@@ -442,6 +447,23 @@ sudo ln -sf "/Applications/Xcode.app/Contents/Developer/Applications/Simulator (
 # Bottom right screen corner → Start screen saver
 defaults write com.apple.dock wvous-br-corner -int 5
 defaults write com.apple.dock wvous-br-modifier -int 0
+
+
+if [[ `ioreg -rd1 -c IOPlatformExpertDevice | grep -i "UUID" | cut -c27-50` != "00000000-0000-1000-8000-" ]]; then
+    macUUID=`ioreg -rd1 -c IOPlatformExpertDevice | grep -i "UUID" | cut -c27-62`
+fi
+
+defaults write ~/Library/Preferences/ByHost/com.apple.screensaver.$macUUID.plist PrefsVersion 100
+defaults write ~/Library/Preferences/ByHost/com.apple.screensaver.$macUUID.plist idleTime 300
+defaults write ~/Library/Preferences/ByHost/com.apple.screensaver.$macUUID.plist moduleDict -dict moduleName "iLifeSlideshows" path "/System/Library/Frameworks/ScreenSaver.framework/Resources/iLifeSlideshows.saver" type -int 0
+defaults write ~/Library/Preferences/ByHost/com.apple.screensaver.$macUUID.plist tokenRemovalAction 0
+
+defaults write ~/Library/Preferences/ByHost/com.apple.ScreenSaverPhotoChooser.$macUUID.plist LastViewedPhotoPath ""
+defaults write ~/Library/Preferences/ByHost/com.apple.ScreenSaverPhotoChooser.$macUUID.plist SelectedFolderPath "/Library/Screen Savers/Default Collections/3-Cosmos"
+defaults write ~/Library/Preferences/ByHost/com.apple.ScreenSaverPhotoChooser.$macUUID.plist SelectedSource -int 3
+defaults write ~/Library/Preferences/ByHost/com.apple.ScreenSaverPhotoChooser.$macUUID.plist ShufflesPhotos -int 1
+
+defaults write ~/Library/Preferences/ByHost/com.apple.ScreenSaver.iLifeSlideShows.$macUUID.plist styleKey "VintagePrints"
 
 ###############################################################################
 # Safari & WebKit                                                             #
@@ -581,41 +603,7 @@ tell application "Terminal"
 	local allOpenedWindows
 	local initialOpenedWindows
 	local windowID
-	set themeName to "Solarized Dark xterm-256color"
-
-	(* Store the IDs of all the open terminal windows. *)
-	set initialOpenedWindows to id of every window
-
-	(* Open the custom theme so that it gets added to the list
-	   of available terminal themes (note: this will open two
-	   additional terminal windows). *)
-	do shell script "open '$HOME/init/" & themeName & ".terminal'"
-
-	(* Wait a little bit to ensure that the custom theme is added. *)
-	delay 1
-
-	(* Set the custom theme as the default terminal theme. *)
-	set default settings to settings set themeName
-
-	(* Get the IDs of all the currently opened terminal windows. *)
-	set allOpenedWindows to id of every window
-
-	repeat with windowID in allOpenedWindows
-
-		(* Close the additional windows that were opened in order
-		   to add the custom theme to the list of terminal themes. *)
-		if initialOpenedWindows does not contain windowID then
-			close (every window whose id is windowID)
-
-		(* Change the theme for the initial opened terminal windows
-		   to remove the need to close them in order for the custom
-		   theme to be applied. *)
-		else
-			set current settings of tabs of (every window whose id is windowID) to settings set themeName
-		end if
-
-	end repeat
-
+	set themeName to "Homebrew"
 end tell
 
 EOD
@@ -624,9 +612,6 @@ EOD
 # i.e. hover over a window and start typing in it without clicking first
 #defaults write com.apple.terminal FocusFollowsMouse -bool true
 #defaults write org.x.X11 wm_ffm -bool true
-
-# Don’t display the annoying prompt when quitting iTerm
-defaults write com.googlecode.iterm2 PromptOnQuit -bool false
 
 ###############################################################################
 # Time Machine                                                                #

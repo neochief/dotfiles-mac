@@ -2,4 +2,8 @@
 
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-ln -s "${DIR}/Russian\ Typography\ +\ Ukrainian.keylayout" ~/Library/Keyboard\ Layouts/Russian\ Typography\ +\ Ukrainian.keylayout
+ln -sf "${DIR}"/Russian\ Typography\ +\ Ukrainian.keylayout ~/Library/Keyboard\ Layouts/Russian\ Typography\ +\ Ukrainian.keylayout
+
+defaults write com.apple.HIToolbox AppleEnabledInputSources -array '<dict><key>InputSourceKind</key><string>Keyboard Layout</string><key>KeyboardLayout ID</key><integer>252</integer><key>KeyboardLayout Name</key><string>ABC</string></dict>' '<dict><key>InputSourceKind</key><string>Keyboard Layout</string><key>KeyboardLayout ID</key><integer>-20914</integer><key>KeyboardLayout Name</key><string>Russian Typography + Ukrainian</string></dict>'
+
+defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 60 "{enabled = 1; value = { parameters = (32, 49, 1048576); type = 'standard'; }; }"
