@@ -2,6 +2,11 @@
 
 sudo -v
 
+sudo dseditgroup -o edit -a `users` -t user wheel
+sudo launchctl config user umask 002
+sudo launchctl config system umask 002
+umask 002
+
 # NginX
 sudo brew services stop nginx
 brew install nginx --force
@@ -12,6 +17,9 @@ sudo chmod 777 /var/log/nginx
 sudo mkdir -p /var/run
 sudo chmod 777 /var/run
 
+sudo chmod -R 1777 /tmp
+sudo chmod -R 1777 /var/tmp
+
 sudo mkdir -p /etc/nginx/sites-available/
 sudo chmod 777 /etc/nginx/sites-available/
 sudo mkdir -p /etc/nginx/sites-enabled/
@@ -20,15 +28,20 @@ sudo mkdir -p /etc/nginx/ssl/
 sudo chmod 777 /etc/nginx/ssl/
 
 sudo rm -f /etc/nginx/nginx.conf
-sudo ln -sf ~/.dotfiles/www/nginx.conf /etc/nginx/nginx.conf
+sudo ln -sf ~/.dotfiles/www/conf/nginx/nginx.conf /etc/nginx/nginx.conf
 
-#sudo vi "+g/^\/home/s/\//#\//" "+x" /etc/auto_master
-#sudo umount /home
+sudo vi "+g/^\/home/s/\//#\//" "+x" /etc/auto_master
+sudo umount /home || true
 sudo rm -rf /home
 sudo ln -sf /Users /home
 sudo mkdir -p /home/forge
 sudo chmod 777 /home/forge
 mkdir -p ~/www
+sudo chgrp _www "$HOME/www"
+sudo chmod g+s "$HOME/www"
+
+# Add current user to nginx group
+sudo dseditgroup -o edit -a `users` -t user _www
 
 sudo brew services restart nginx
 
@@ -47,10 +60,12 @@ brew install php70 --force \
 
 brew install php70-xdebug
 
-sed -i '' "s/127.0.0.1:9000/127.0.0.1:9001/g" /usr/local/etc/php/7.0/php-fpm.d/www.conf
-
-echo "xdebug.idekey=\"PHPSTORM\"" | sudo tee -a /usr/local/etc/php/7.0/conf.d/ext-xdebug.ini > /dev/null
-echo "xdebug.remote_enable=1" | sudo tee -a /usr/local/etc/php/7.0/conf.d/ext-xdebug.ini > /dev/null
+sudo rm -f /usr/local/etc/php/7.0/php-fpm.d/www.conf
+sudo ln -sf ~/.dotfiles/www/conf/php/php-fpm.d_www.conf /usr/local/etc/php/7.0/php-fpm.d/www.conf
+sudo rm -f /usr/local/etc/php/7.0/php-fpm.conf
+sudo ln -sf ~/.dotfiles/www/conf/php/php-fpm.conf /usr/local/etc/php/7.0/php-fpm.conf
+sudo rm -f /usr/local/etc/php/7.0/conf.d/ext-xdebug.ini
+sudo ln -sf ~/.dotfiles/www/conf/php/conf.d_ext-xdebug.ini /usr/local/etc/php/7.0/conf.d/ext-xdebug.ini
 
 sudo brew services restart php70
 
@@ -59,10 +74,10 @@ brew install composer --force
 composer config -g github-oauth.github.com `git config github.token`
 
 # MySQL
-sudo brew services stop mariadb
+brew services stop mariadb
 brew install mariadb --force
 mysql_install_db
-sudo brew services start mariadb
+brew services start mariadb
 sleep 1
 
 # Make sure that NOBODY can access the server without a password
@@ -77,14 +92,18 @@ mysql -e "DROP DATABASE test" -uroot -proot
 mysql -e "FLUSH PRIVILEGES" -uroot -proot
 # Any subsequent tries to run queries this way will get access denied because lack of usr/pwd param
 
-sudo brew services restart mariadb
+brew services restart mariadb
 
 
 # Node & NPM
 npm install -g grunt-cli
-
+npm install -g npm-check-updates
 
 # Selenium
 brew services stop selenium-server-standalone
-brew install selenium-server-standalone
+brew install selenium-server-standalone --force
 brew services start selenium-server-standalone
+brew services stop chromedriver
+brew install chromedriver --force
+brew services start chromedriver
+

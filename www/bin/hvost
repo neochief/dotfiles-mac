@@ -2,9 +2,9 @@
 
 sudo -v
 
-template_location="$HOME/.dotfiles/www/site-template.conf"
+template_location="$ZSH/www/bin/site-template.conf"
 if [ ! -f "${template_location}" ]; then
-    echo "ERROR: nginx site template is missing (~/.dotfiles/www/site-template.conf)."
+    echo "ERROR: nginx site template is missing ($template_location)."
     exit 1
 fi
 
@@ -81,6 +81,8 @@ fi
 # Generate doc root.
 doc_root="$HOME/www/${domain}"
 mkdir -p "$HOME/www/${domain}"
+sudo chgrp _www "$HOME/www/${domain}"
+sudo chmod g+s "$HOME/www/${domain}"
 
 # SSL certs.
 cert_location="$HOME/www/ssl/${domain}"

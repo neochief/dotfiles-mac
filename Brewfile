@@ -42,6 +42,7 @@ cask 'alfred'
 cask 'karabiner'
 cask 'logitech-control-center'
 cask 'rescuetime'
+cask 'day-o'
 
 cask 'skype'
 cask 'phpstorm'

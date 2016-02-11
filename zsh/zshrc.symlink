@@ -99,3 +99,5 @@ plugins=(git composer sublime colored-man cp extract)
 source $ZSH/oh-my-zsh.sh
 
 unalias mysql
+
+export ZSH=$HOME/.dotfiles

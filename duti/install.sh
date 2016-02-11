@@ -19,3 +19,7 @@
 /usr/local/bin/duti -s com.sublimetext.3 java all
 /usr/local/bin/duti -s com.sublimetext.3 plist all
 /usr/local/bin/duti -s com.sublimetext.3 md all
+/usr/local/bin/duti -s com.sublimetext.3 log all
+/usr/local/bin/duti -s com.sublimetext.3 ini all
+/usr/local/bin/duti -s com.sublimetext.3 err all
+/usr/local/bin/duti -s com.sublimetext.3 htaccess all

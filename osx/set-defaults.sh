@@ -45,8 +45,18 @@ defaults write com.apple.systemuiserver menuExtras -array \
 	"/System/Library/CoreServices/Menu Extras/Bluetooth.menu" \
 	"/System/Library/CoreServices/Menu Extras/AirPort.menu" \
 	"/System/Library/CoreServices/Menu Extras/Battery.menu" \
-	"/System/Library/CoreServices/Menu Extras/Volume.menu" \
-	"/System/Library/CoreServices/Menu Extras/Clock.menu"
+	"/System/Library/CoreServices/Menu Extras/Volume.menu"
+
+# Set the clock settings (System Preferences → Date & Time → Clock)
+defaults write com.apple.menuextra.clock DateFormat -string "EEE MMM d  HH:mm"
+defaults write com.apple.menuextra.clock FlashDateSeparators -bool false
+defaults write com.apple.menuextra.clock IsAnalog -bool false
+
+# 24-Hour Time
+defaults write NSGlobalDomain AppleICUForce12HourTime -bool false
+
+# Day-O Time format
+defaults write com.shauninman.Day-O.plist format -string "EEE MMM d  HH:mm"
 
 # Set highlight color to green
 #defaults write NSGlobalDomain AppleHighlightColor -string "0.780400 0.815700 0.858800"
