@@ -81,8 +81,9 @@ fi
 # Generate doc root.
 doc_root="$HOME/www/${domain}"
 mkdir -p "$HOME/www/${domain}"
-sudo chgrp _www "$HOME/www/${domain}"
-sudo chmod g+s "$HOME/www/${domain}"
+sudo chgrp -R _www "$HOME/www/${domain}"
+sudo chmod -R g+s "$HOME/www/${domain}"
+sudo chmod -R 775 "$HOME/www/${domain}"
 
 # SSL certs.
 cert_location="$HOME/www/ssl/${domain}"
@@ -122,6 +123,10 @@ if [ -n "$2" ]; then
 else
     echo -n "Enter the GIT repository path if needed (optional): "
     read git_repo
+fi
+
+if [[ $git_repo != http:* ]] && [[ $git_repo != git@* ]]; then
+    git_repo="https://github.com/$git_repo.git"
 fi
 
 if [ ! "${git_repo}" == "" ]; then
@@ -177,13 +182,16 @@ if [ ! "${git_repo}" == "" ]; then
             backup_path="$HOME/Dropbox/work/backups/${project}/mysql/${project}_prod.sql.gz"
         fi
         if [ "${backup_path}" != "" ]; then
-            gunzip < "${backup_path}" | mysql -u root -proot "\`${project}\`"
+            gunzip < "${backup_path}" | mysql -u root -proot "${project}"
         fi
 
         echo "Checking out branch ${git_branch}..."
         if [ ! "${git_branch}" == "" ]; then
             cd "${doc_root}" && git checkout "${git_branch}" && git submodule foreach --recursive git checkout "${git_branch}"
         fi
+        sudo chgrp -R _www "$HOME/www/${domain}"
+        sudo chmod -R g+s "$HOME/www/${domain}"
+        sudo chmod -R 775 "$HOME/www/${domain}"
 
         echo "Installing dependencies and launching build..."
         cd "${doc_root}" && composer install && php artisan migrate && npm install && grunt dev

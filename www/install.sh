@@ -37,8 +37,9 @@ sudo ln -sf /Users /home
 sudo mkdir -p /home/forge
 sudo chmod 777 /home/forge
 mkdir -p ~/www
-sudo chgrp _www "$HOME/www"
-sudo chmod g+s "$HOME/www"
+sudo chgrp -R _www "$HOME/www"
+sudo chmod -R g+s "$HOME/www"
+sudo chmod -R 775 "$HOME/www"
 
 # Add current user to nginx group
 sudo dseditgroup -o edit -a `users` -t user _www
