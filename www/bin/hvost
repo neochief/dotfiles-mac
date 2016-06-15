@@ -92,7 +92,7 @@ mkdir -p "$HOME/www/ssl/${domain}"
 
 if [ ! -f "${cert_location}/${domain}.key" ]; then
     cd "${cert_location}" && \
-    openssl req -nodes -new -x509 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${domain}" -keyout "${domain}.key" -out "${domain}.crt" &> /dev/null
+    openssl req -nodes -new -x509 -days 3000 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${domain}" -keyout "${domain}.key" -out "${domain}.crt" &> /dev/null
     sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "${domain}.crt"
 fi
 
