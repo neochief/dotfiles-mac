@@ -60,6 +60,7 @@ brew install php70 --force \
 --without-snmp
 
 brew install php70-xdebug
+brew install php70-mcrypt
 
 sudo rm -f /usr/local/etc/php/7.0/php-fpm.d/www.conf
 sudo ln -sf ~/.dotfiles/www/conf/php/php-fpm.d_www.conf /usr/local/etc/php/7.0/php-fpm.d/www.conf
