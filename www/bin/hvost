@@ -144,7 +144,7 @@ if [ ! "${git_repo}" == "" ]; then
         echo "Can't clone repo, the DOCUMENT ROOT (~/www/${domain}) is not empty. Do it manually, please."
         open "${doc_root}"
     else
-        git clone --recursive "${git_repo}" "${doc_root}"
+        git clone --recursive --config core.fileMode=false "${git_repo}" "${doc_root}"
 
         new_doc_root=""
         if [ -d "${doc_root}/website" ]; then
