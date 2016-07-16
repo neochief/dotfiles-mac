@@ -40,3 +40,4 @@ alias ccrf="vendor/bin/codecept run functional"
 
 alias art="php artisan"
 alias c="composer"
+alias acc="php artisan cache:clear"

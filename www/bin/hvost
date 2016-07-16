@@ -194,7 +194,7 @@ if [ ! "${git_repo}" == "" ]; then
         sudo chmod -R 775 "$HOME/www/${domain}"
 
         echo "Installing dependencies and launching build..."
-        cd "${doc_root}" && composer install && php artisan migrate && npm install && grunt dev
+        cd "${doc_root}" && composer install && php artisan migrate && npm install && grunt __dev
     fi
 else
     if [ $(find ${doc_root} -maxdepth 1 | wc -l) -le 1 ]; then
