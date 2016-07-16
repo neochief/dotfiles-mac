@@ -145,6 +145,14 @@ if [ ! "${git_repo}" == "" ]; then
         open "${doc_root}"
     else
         git clone --recursive --config core.fileMode=false "${git_repo}" "${doc_root}"
+        git config core.fileMode false
+        # TODO: refactor this into reading a .submodule file and looping over submodules
+        if [ -d "${doc_root}/resources/content" ]; then
+            cd "${doc_root}/resources/content" && git config core.fileMode false
+        fi
+        if [ -d "${doc_root}/packages/ShvetsGroup" ]; then
+            cd "${doc_root}/packages/ShvetsGroup" && git config core.fileMode false
+        fi
 
         new_doc_root=""
         if [ -d "${doc_root}/website" ]; then
@@ -153,6 +161,7 @@ if [ ! "${git_repo}" == "" ]; then
         if [ -d "${doc_root}/public" ]; then
             new_doc_root="${doc_root}/public"
         fi
+
         if [ "$new_doc_root" != "" ]; then
             sed -i '' "s/root .*;/root $(echo $new_doc_root | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g');/g" "${host_config}"
             sudo nginx -s reload
