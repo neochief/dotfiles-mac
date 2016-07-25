@@ -28,10 +28,10 @@ host_config_enabled="/etc/nginx/sites-enabled/${domain}.conf"
 
 # Check whether the host is already generated.
 if [ -f "${host_config}" ]; then
-    echo -n "This host already exists. Do you want to remove it [ yes / no ]? "
+    echo -n "This host already exists. Do you want to remove it [ yes / no ]? (yes) "
     read confirm
 
-    if [ "${confirm}" == "yes" ]; then
+    if [ "$confirm" == "" ] || [ "${confirm}" == "yes" ]; then
         result=""
 
         if [ -d "${HOME}/www/${domain}" ]; then
@@ -68,6 +68,13 @@ if [ -f "${host_config}" ]; then
         sudo security delete-certificate -c "${domain}"
         rm -rf "$HOME/www/ssl/${domain}"
         sudo sed -i '' -e ':a' -e 'N' -e '$!ba' -e "s/\n*127.0.0.1 ${domain} #auto-host//g" /etc/hosts
+
+        cd ~/Library/Application\ Support/Firefox/Profiles;
+        for certDB in $(find  . -name "cert8.db"); do
+           certDir=$(dirname ${certDB});
+            /usr/local/opt/nss/bin/certutil -D -n "${domain}" -d "${certDir}"
+        done
+
         sudo nginx -s reload
         #flush cache
         sudo killall -HUP mDNSResponder && scutil --dns > /dev/null
@@ -92,10 +99,18 @@ mkdir -p "$HOME/www/ssl/${domain}"
 
 if [ ! -f "${cert_location}/${domain}.key" ]; then
     cd "${cert_location}" && \
-    openssl req -nodes -new -x509 -days 3000 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${domain}" -keyout "${domain}.key" -out "${domain}.crt" &> /dev/null
-    sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "${domain}.crt"
+    openssl req -nodes -new -x509 -config ~/.dotfiles/www/bin/openssl-ca.cnf -days 3000 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=${domain}" -keyout "${domain}.key" -out "${domain}.crt" &> /dev/null
 fi
 
+if [ -f "${cert_location}/${domain}.key" ]; then
+    sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "${domain}.crt"
+
+    cd ~/Library/Application\ Support/Firefox/Profiles;
+    for certDB in $(find  . -name "cert8.db"); do
+       certDir=$(dirname ${certDB});
+       /usr/local/opt/nss/bin/certutil -A -n "${domain}" -t "TC,," -i "${cert_location}/${domain}.crt" -d "${certDir}"
+    done
+fi
 
 # NginX configs.
 cp "${template_location}" "${host_config}"
@@ -117,6 +132,25 @@ sudo killall -HUP mDNSResponder && scutil --dns > /dev/null
 echo "Host ${domain} created."
 
 
+# MySQL.
+echo "Creating DB..."
+mysql -e "CREATE DATABASE IF NOT EXISTS \`${project}\` CHARACTER SET utf8 COLLATE utf8_general_ci" -uroot -proot
+
+backup_path=""
+if [ -f "$HOME/Dropbox/work/backups/${project}.com/mysql/${project}_prod.sql.gz" ]; then
+    backup_path="$HOME/Dropbox/work/backups/${project}.com/mysql/${project}_prod.sql.gz"
+fi
+if [ -f "$HOME/Dropbox/work/backups/${project}.guru/mysql/${project}_prod.sql.gz" ]; then
+    backup_path="$HOME/Dropbox/work/backups/${project}.guru/mysql/${project}_prod.sql.gz"
+fi
+if [ -f "$HOME/Dropbox/work/backups/${project}/mysql/${project}_prod.sql.gz" ]; then
+    backup_path="$HOME/Dropbox/work/backups/${project}/mysql/${project}_prod.sql.gz"
+fi
+if [ "${backup_path}" != "" ]; then
+    gunzip < "${backup_path}" | mysql -u root -proot "${project}"
+fi
+
+
 # Checkout from GIT.
 if [ -n "$2" ]; then
     git_repo="$2"
@@ -125,20 +159,20 @@ else
     read git_repo
 fi
 
-if [[ $git_repo != http:* ]] && [[ $git_repo != git@* ]]; then
-    git_repo="https://github.com/$git_repo.git"
+if [ ! -z "${git_repo}" -a "${git_repo}" != " " ]; then
+    if [[ $git_repo != http:* ]] && [[ $git_repo != git@* ]]; then
+        git_repo="https://github.com/$git_repo.git"
+    fi
 fi
 
-if [ ! "${git_repo}" == "" ]; then
+if [ ! -z "${git_repo}" -a "${git_repo}" != " " ]; then
     if [ -n "$3" ]; then
         git_branch="$3"
     else
         echo -n "Enter the branch name (master): "
         read git_branch
     fi
-fi
 
-if [ ! "${git_repo}" == "" ]; then
     # if docroot is not empty, then abort
     if [ $(find ${doc_root} -maxdepth 1 | wc -l) -gt 1 ]; then
         echo "Can't clone repo, the DOCUMENT ROOT (~/www/${domain}) is not empty. Do it manually, please."
@@ -177,23 +211,6 @@ if [ ! "${git_repo}" == "" ]; then
             sed -i '' "s/DB_PASSWORD=.*/DB_PASSWORD=root/g" "${doc_root}/.env"
         fi
 
-        echo "Creating DB..."
-        mysql -e "CREATE DATABASE IF NOT EXISTS \`${project}\` CHARACTER SET utf8 COLLATE utf8_general_ci" -uroot -proot
-
-        backup_path=""
-        if [ -f "$HOME/Dropbox/work/backups/${project}.com/mysql/${project}_prod.sql.gz" ]; then
-            backup_path="$HOME/Dropbox/work/backups/${project}.com/mysql/${project}_prod.sql.gz"
-        fi
-        if [ -f "$HOME/Dropbox/work/backups/${project}.guru/mysql/${project}_prod.sql.gz" ]; then
-            backup_path="$HOME/Dropbox/work/backups/${project}.guru/mysql/${project}_prod.sql.gz"
-        fi
-        if [ -f "$HOME/Dropbox/work/backups/${project}/mysql/${project}_prod.sql.gz" ]; then
-            backup_path="$HOME/Dropbox/work/backups/${project}/mysql/${project}_prod.sql.gz"
-        fi
-        if [ "${backup_path}" != "" ]; then
-            gunzip < "${backup_path}" | mysql -u root -proot "${project}"
-        fi
-
         echo "Checking out branch ${git_branch}..."
         if [ ! "${git_branch}" == "" ]; then
             cd "${doc_root}" && git checkout "${git_branch}" && git submodule foreach --recursive git checkout "${git_branch}"
@@ -206,6 +223,20 @@ if [ ! "${git_repo}" == "" ]; then
         cd "${doc_root}" && composer install && php artisan migrate && npm install && grunt __dev
     fi
 else
+    echo -n "Will it be laravel? (point host to 'public' directory?) [ yes / no ]? (no) "
+    read is_laravel
+
+    if [ "$is_laravel" == "yes" ]; then
+        doc_root="${doc_root}/public"
+        mkdir -p "${doc_root}"
+        sudo chgrp -R _www "${doc_root}"
+        sudo chmod -R g+s "${doc_root}"
+        sudo chmod -R 775 "${doc_root}"
+
+        sed -i '' "s/root .*;/root $(echo $doc_root | sed -e 's/\\/\\\\/g' -e 's/\//\\\//g' -e 's/&/\\\&/g');/g" "${host_config}"
+        sudo nginx -s reload
+    fi
+
     if [ $(find ${doc_root} -maxdepth 1 | wc -l) -le 1 ]; then
         touch "${doc_root}/index.html"
         echo "[${domain}] is working!" >> "${doc_root}/index.html"

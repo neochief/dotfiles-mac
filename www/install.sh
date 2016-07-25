@@ -7,6 +7,9 @@ sudo launchctl config user umask 002
 sudo launchctl config system umask 002
 umask 002
 
+# Firefox SSL utils
+brew install nss
+
 # NginX
 sudo brew services stop nginx
 brew install nginx --force
