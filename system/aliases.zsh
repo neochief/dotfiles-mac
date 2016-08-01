@@ -38,9 +38,6 @@ alias ccr="vendor/bin/codecept run"
 alias ccra="vendor/bin/codecept run acceptance"
 alias ccrf="vendor/bin/codecept run functional"
 
-# Load xdebug Zend extension with php command
-alias php='php -dzend_extension="/usr/local/opt/php70-xdebug/xdebug.so"'
-alias phpunit='php $(which phpunit)'
 alias art="php artisan"
 alias c="composer"
 alias acc="php artisan cache:clear"
