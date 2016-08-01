@@ -69,11 +69,9 @@ if [ -f "${host_config}" ]; then
         rm -rf "$HOME/www/ssl/${domain}"
         sudo sed -i '' -e ':a' -e 'N' -e '$!ba' -e "s/\n*127.0.0.1 ${domain} #auto-host//g" /etc/hosts
 
-        cd ~/Library/Application\ Support/Firefox/Profiles;
-        for certDB in $(find  . -name "cert8.db"); do
-           certDir=$(dirname ${certDB});
-            /usr/local/opt/nss/bin/certutil -D -n "${domain}" -d "${certDir}"
-        done
+        profile=$(find ~/Library/Application\ Support/Firefox/Profiles -name "cert8.db")
+        certDir=$(dirname "$profile")
+        /usr/local/opt/nss/bin/certutil -D -n "${domain}" -d "${certDir}"
 
         sudo nginx -s reload
         #flush cache
@@ -104,12 +102,9 @@ fi
 
 if [ -f "${cert_location}/${domain}.key" ]; then
     sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "${domain}.crt"
-
-    cd ~/Library/Application\ Support/Firefox/Profiles;
-    for certDB in $(find  . -name "cert8.db"); do
-       certDir=$(dirname ${certDB});
-       /usr/local/opt/nss/bin/certutil -A -n "${domain}" -t "TC,," -i "${cert_location}/${domain}.crt" -d "${certDir}"
-    done
+    profile=$(find ~/Library/Application\ Support/Firefox/Profiles -name "cert8.db")
+    certDir=$(dirname "$profile")
+    /usr/local/opt/nss/bin/certutil -A -n "${domain}" -t "TC,," -i "${cert_location}"/"${domain}".crt -d "${certDir}"
 fi
 
 # NginX configs.
