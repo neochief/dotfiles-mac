@@ -2,6 +2,8 @@
 
 sudo -v
 
+brew update
+
 sudo dseditgroup -o edit -a `users` -t user wheel
 sudo launchctl config user umask 002
 sudo launchctl config system umask 002
