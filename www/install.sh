@@ -56,6 +56,11 @@ brew tap homebrew/dupes
 brew tap homebrew/versions
 brew tap homebrew/homebrew-php
 brew services stop php70
+
+brew uninstall php70
+brew uninstall php70-xdebug
+brew uninstall php70-mcrypt
+
 brew install php70 --force \
 --with-fpm \
 --without-apache \
@@ -75,6 +80,13 @@ sudo rm -f /usr/local/etc/php/7.0/php-fpm.conf
 sudo ln -sf ~/.dotfiles/www/conf/php/php-fpm.conf /usr/local/etc/php/7.0/php-fpm.conf
 sudo rm -f /usr/local/etc/php/7.0/conf.d/ext-xdebug.ini
 sudo ln -sf ~/.dotfiles/www/conf/php/conf.d_ext-xdebug.ini /usr/local/etc/php/7.0/conf.d/ext-xdebug.ini
+
+sudo mkdir /var/log/xdebug
+sudo mkdir /var/log/xdebug/trace
+sudo mkdir /var/log/xdebug/profiler
+sudo chmod 777 /var/log/xdebug
+sudo chmod 777 /var/log/xdebug/trace
+sudo chmod 777 /var/log/xdebug/profiler
 
 sudo brew services restart php70
 
