@@ -67,6 +67,8 @@ brew install php70 --force \
 brew install php70-xdebug
 brew install php70-mcrypt
 
+sudo rm -f /usr/local/etc/php/7.0/php.ini
+sudo ln -sf ~/.dotfiles/www/conf/php/php.ini /usr/local/etc/php/7.0/php.ini
 sudo rm -f /usr/local/etc/php/7.0/php-fpm.d/www.conf
 sudo ln -sf ~/.dotfiles/www/conf/php/php-fpm.d_www.conf /usr/local/etc/php/7.0/php-fpm.d/www.conf
 sudo rm -f /usr/local/etc/php/7.0/php-fpm.conf
