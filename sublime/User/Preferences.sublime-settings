@@ -16,6 +16,6 @@
 	"open_files_in_new_window": false,
 	"tab_size": 4,
 	"theme": "Flatland Dark.sublime-theme",
-	"translate_tabs_to_spaces": true,
+	"translate_tabs_to_spaces": false,
 	"use_tab_stops": true
 }

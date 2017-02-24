@@ -40,6 +40,8 @@ sudo nvram SystemAudioVolume=" "
 for domain in ~/Library/Preferences/ByHost/com.apple.systemuiserver.*; do
 	defaults write "${domain}" dontAutoLoad -array \
 		"/System/Library/CoreServices/Menu Extras/TimeMachine.menu"
+    defaults write "${domain}" dontAutoLoad -array \
+		"/System/Library/CoreServices/Menu Extras/Clock.menu"
 done
 defaults write com.apple.systemuiserver menuExtras -array \
 	"/System/Library/CoreServices/Menu Extras/Bluetooth.menu" \

@@ -12,9 +12,16 @@ umask 002
 # Firefox SSL utils
 brew install nss
 
+brew install openssl
+brew upgrade openssl
+ln -s /usr/local/Cellar/openssl/1.0.2h_1/bin/openssl /usr/local/bin/openssl
+
 # NginX
 sudo brew services stop nginx
-brew install nginx --force
+brew tap homebrew/nginx
+brew unlink nginx
+brew install nginx-full --with-http2 --force
+openssl dhparam -out /etc/nginx/dhparams.pem 2048
 
 sudo ln -sf /usr/local/etc/nginx /etc/nginx
 sudo mkdir -p /var/log/nginx
